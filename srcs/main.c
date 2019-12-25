@@ -51,6 +51,7 @@ void	show_alloc_mem()
 	ft_printf("Total : %d bytes\n", total);
 };
 
+// Align the requested size to either 16bytes or 512bytes depends on the zone
 size_t   ft_align_chunk(size_t len, size_t zone_size)
 {
 	if (zone_size == TINY_ZONE_SIZE)
@@ -59,15 +60,18 @@ size_t   ft_align_chunk(size_t len, size_t zone_size)
 		return (((((len)-1)>>9)<<9)+512);
 };
 
+// Create a new block
 t_block  *ft_create_block(t_zone *zone, size_t zone_size, size_t size, \
   t_block *prev_block)
 {
 	void    *new_location;
 	t_block *block;
 
+	// If this is the 1st block, the new location is base on the start of the zone + the size of zone struct 
 	if (zone->block == NULL)
 		new_location = (void *)zone + sizeof(t_zone);
 	else
+	// Else the new location is base on previous block location + the previous size + metadata block size
 	{
 		new_location = (void *)prev_block + (prev_block->size_and_flag >> 1)
 			+ BLOCK_SIZE;
@@ -76,7 +80,7 @@ t_block  *ft_create_block(t_zone *zone, size_t zone_size, size_t size, \
 		< (long)(BLOCK_SIZE + size))
 	return NULL; // not enough size to be given at the new location
 	block = new_location;
-	block->size_and_flag = 1;
+	block->size_and_flag = (size << 1);
 	block->next = NULL;
 	if (zone->block == NULL)
 		zone->block = block;
@@ -94,44 +98,72 @@ void    ft_create_zone(t_zone **zone, size_t zone_size)
 	(*zone)->block = NULL;
 };
 
+void		ft_split_block(t_zone *zone, t_block *block, size_t zone_size, \
+			size_t size)
+{
+	int		min_size;
+	int		remaining;
+	t_block	*new_block;
+
+	if (zone_size == TINY_ZONE_SIZE)
+		min_size = BLOCK_SIZE + TINY_CHUNK_SIZE;
+	else
+		min_size = BLOCK_SIZE + SMALL_CHUNK_SIZE;
+	remaining = (block->size_and_flag >> 1) - size;
+	// After the remaining size is calculated, assign the new allocated size to the block
+	block->size_and_flag = (size << 1);
+	// If the remaining size is enough to store even a metadata block, we split it and set the new block as free
+	if (remaining >= BLOCK_SIZE)
+	{
+		new_block = ft_create_block(zone, zone_size, remaining - BLOCK_SIZE, block);
+		new_block->size_and_flag ^= 1;
+		new_block->next = block->next;
+		block->next = new_block;
+	}
+};
+
 void	ft_get_block(t_zone *zone, size_t zone_size, size_t size, \
 	t_block **block)
 {
 	t_block *prev;
 
 	prev = NULL;
+	// iterate to find a free block, if it is free, check if the size is correct, if not iterate till the end of the chain
 	while ((*block) && \
-		// (((*block)->size_and_flag & 1) == 0))
 		(((*block)->size_and_flag & 1) == 0 || ((*block)->size_and_flag >> 1) < size))
 	{
 		prev = (*block);
 		(*block) = (*block)->next;
 	};
+	// No free block to be use, create a new block and add it to the end of the chain list
 	if((*block) == NULL)
 	{
 		(*block) = ft_create_block(zone, zone_size, size, prev);
-	};
-	if (prev)
-		prev->next = (*block);
+		if (prev)
+			prev->next = (*block);
+	}
+	// Found a free block, assign the new size and check if the remaining size is splitable 
+	else
+	{
+		ft_split_block(zone, (*block), zone_size, size);
+	}
 };
 
-void      *ft_alloc_data(t_zone **zone, size_t zone_size, size_t len)
+void		*ft_alloc_data(t_zone **zone, size_t zone_size, size_t len)
 {
 	size_t  size;
 	t_block *block;
-	t_block *prev;
 
 	if ((*zone) == NULL)
 		ft_create_zone(zone, zone_size);
 	block = (*zone)->block;
-	prev = NULL;
 	size = ft_align_chunk(len, zone_size);
 	if ((*zone)->remaining < (size + BLOCK_SIZE))
     	return (NULL); // not enough size to be given
 	ft_get_block((*zone), zone_size, size, &block);
 	if(block == NULL)
 		return (NULL);
-	block->size_and_flag = (size << 1);
+	//TODO redo the remaining calculation, if reuse the previous remaining
 	(*zone)->remaining -= (size + BLOCK_SIZE);
 	// ft_printf("remaining : %d\n", (*zone)->remaining);
 	return (block + 1);
@@ -154,7 +186,7 @@ void    *ft_malloc(size_t len)
 	return (pointer);
 };
 
-void	ft_find_block_from_zone(t_zone **zone, void *ptr)
+void	ft_free_block(t_zone **zone, void *ptr)
 {
 	t_block	*block;
 
@@ -179,11 +211,11 @@ int		ft_find_block(void *ptr)
 	small_end = small_start + SMALL_ZONE_SIZE - 1;
 	if (tiny_start < ptr && ptr < tiny_end)
 	{
-		ft_find_block_from_zone(&g_map.tiny, ptr);
+		ft_free_block(&g_map.tiny, ptr);
 	}
 	else if (small_start < ptr && ptr < small_end)
 	{
-		ft_find_block_from_zone(&g_map.small, ptr);
+		ft_free_block(&g_map.small, ptr);
 	}
 	return 0;
 };
@@ -211,7 +243,7 @@ int main(int ac, char **av)
 
 	char *p1 = ft_malloc(1);
 	// ft_free(p1);
-	// char *s1 = ft_malloc(497);
+	// char *s1 = ft_malloc(1024);
 	// ft_free(s1);
 	char *p2 = ft_malloc(17);
 	// ft_free(p1);
@@ -219,6 +251,7 @@ int main(int ac, char **av)
 	// ft_free(s1);
 	// ft_strcpy(p1, "0123456789abcdef~!!");
 	char *p3 = ft_malloc(10);
+	char *p4 = ft_malloc(10);
 	// p1 = ft_malloc(1);
 	// char *s3 = ft_malloc(512);
 	ft_printf("p1 address : %p\n", p1);
@@ -227,6 +260,7 @@ int main(int ac, char **av)
 	ft_printf("p2 address : %p\n", p2);
 	// ft_printf("s2 address : %p\n", s2);
 	ft_printf("p3 address : %p\n", p3);
+	ft_printf("p4 address : %p\n", p4);
 	// ft_printf("s3 address : %p\n", s3);
 	// ft_free(s1);
 	// ft_free(s2);
@@ -285,5 +319,5 @@ int main(int ac, char **av)
   // ft_printf("address diff between p2 and p3: %d\n", p3-p2);
   // ft_strcpy(map2, "abcde");
   // munmap(map2, 10);
-  return (0);
+	return (0);
 };
