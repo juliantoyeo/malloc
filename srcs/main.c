@@ -32,6 +32,7 @@ void	ft_print_alloc_mem(t_zone *zone, size_t *total)
 		ft_printf("im the block free : %d\n", block->size_and_flag & 1);
 		block = block->next;
 	}
+	ft_printf("remaining : %d\n", zone->remaining);
 };
 
 void	show_alloc_mem()
@@ -84,6 +85,7 @@ t_block  *ft_create_block(t_zone *zone, size_t zone_size, size_t size, \
 	block->next = NULL;
 	if (zone->block == NULL)
 		zone->block = block;
+	zone->remaining -= (size + BLOCK_SIZE);
 	return (block);
 };
 
@@ -112,6 +114,7 @@ void		ft_split_block(t_zone *zone, t_block *block, size_t zone_size, \
 	remaining = (block->size_and_flag >> 1) - size;
 	// After the remaining size is calculated, assign the new allocated size to the block
 	block->size_and_flag = (size << 1);
+	zone->remaining -= size;
 	// If the remaining size is enough to store even a metadata block, we split it and set the new block as free
 	if (remaining >= BLOCK_SIZE)
 	{
@@ -119,6 +122,7 @@ void		ft_split_block(t_zone *zone, t_block *block, size_t zone_size, \
 		new_block->size_and_flag ^= 1;
 		new_block->next = block->next;
 		block->next = new_block;
+		zone->remaining += (new_block->size_and_flag >> 1);
 	}
 };
 
@@ -158,14 +162,12 @@ void		*ft_alloc_data(t_zone **zone, size_t zone_size, size_t len)
 		ft_create_zone(zone, zone_size);
 	block = (*zone)->block;
 	size = ft_align_chunk(len, zone_size);
-	if ((*zone)->remaining < (size + BLOCK_SIZE))
+	if ((*zone)->remaining < size)
     	return (NULL); // not enough size to be given
 	ft_get_block((*zone), zone_size, size, &block);
 	if(block == NULL)
 		return (NULL);
-	//TODO redo the remaining calculation, if reuse the previous remaining
-	(*zone)->remaining -= (size + BLOCK_SIZE);
-	// ft_printf("remaining : %d\n", (*zone)->remaining);
+	ft_printf("remaining : %d\n", (*zone)->remaining);
 	return (block + 1);
 };
 
@@ -200,6 +202,7 @@ void	ft_delete_block(t_zone **zone, size_t zone_size)
 	}
 	ft_bzero(block, (block->size_and_flag >> 1) + BLOCK_SIZE);
 	block = NULL;
+	(*zone)->remaining += BLOCK_SIZE;
 	if(prev)
 		prev->next = block;
 	else
@@ -221,20 +224,25 @@ void	ft_merge_block(t_block **block, t_block **next)
 void	ft_defrag(t_zone **zone, size_t zone_size, t_block *block, t_block *prev)
 {
 	t_block	*tmp;
+	size_t	size_freed;
 
+	size_freed = (block->size_and_flag >> 1);
 	if(prev && (prev->size_and_flag & 1) == 1)
 	{
 		ft_printf("prev block is free\n");
 		tmp = block;
 		block = prev;
 		ft_merge_block(&block, &tmp);
+		size_freed += BLOCK_SIZE;
 	}
 	if(block->next && (block->next->size_and_flag & 1) == 1)
 	{
 		ft_printf("next block is free\n");
 		tmp = block->next;
 		ft_merge_block(&block, &tmp);
+		size_freed += BLOCK_SIZE;
 	}
+	(*zone)->remaining += size_freed;
 	if(block->next == NULL)
 	{
 		ft_printf("im the last block that is free %p\n", block);
@@ -255,6 +263,7 @@ void	ft_free_block(t_zone **zone, size_t zone_size, void *ptr)
 		block = block->next;
 	}
 	block->size_and_flag = block->size_and_flag ^ 1;
+	// (*zone)->remaining += (block->size_and_flag >> 1);
 	ft_defrag(zone, zone_size, block, prev);
 };
 
@@ -301,7 +310,7 @@ int main(int ac, char **av)
 	// ft_malloc(4033);
 	// ft_malloc(1);
 
-	char *p1 = ft_malloc(1);
+	char *p1 = ft_malloc(32);
 	// ft_free(p1);
 	// char *s1 = ft_malloc(1024);
 	// ft_free(s1);
@@ -311,21 +320,20 @@ int main(int ac, char **av)
 	// ft_free(s1);
 	// ft_strcpy(p1, "0123456789abcdef~!!");
 	char *p3 = ft_malloc(10);
-	// show_alloc_mem();
-	// ft_free(p1);
-	// show_alloc_mem();
-	// ft_free(p2);
-	// show_alloc_mem();
-	char *p4 = ft_malloc(10);
-	ft_free(p3);
-	// ft_free(p1);
-	show_alloc_mem();
-	ft_free(p2);
-	show_alloc_mem();
-	ft_free(p4);
 	show_alloc_mem();
 	ft_free(p1);
 	show_alloc_mem();
+	// ft_free(p2);
+	// show_alloc_mem();
+	char *p4 = ft_malloc(10);
+	// ft_free(p3);
+	// show_alloc_mem();
+	// ft_free(p2);
+	// show_alloc_mem();
+	// ft_free(p4);
+	// show_alloc_mem();
+	// ft_free(p1);
+	// show_alloc_mem();
 	// p1 = ft_malloc(1);
 	// ft_free(p4);
 	// p1 = ft_malloc(1);
