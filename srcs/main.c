@@ -186,16 +186,76 @@ void    *ft_malloc(size_t len)
 	return (pointer);
 };
 
-void	ft_free_block(t_zone **zone, void *ptr)
+void	ft_delete_block(t_zone **zone, size_t zone_size)
 {
+	t_block	*prev;
 	t_block	*block;
 
+	prev = NULL;
+	block = (*zone)->block;
+	while(block->next)
+	{
+		prev = block;
+		block = block->next;
+	}
+	ft_bzero(block, (block->size_and_flag >> 1) + BLOCK_SIZE);
+	block = NULL;
+	if(prev)
+		prev->next = block;
+	else
+	{
+		//if the program reach this point, means that the current block is the last free block in the zone, and the whole zone should be unmapped
+		munmap((*zone), zone_size);
+		(*zone) = NULL;
+	}
+};
+
+void	ft_merge_block(t_block **block, t_block **next)
+{
+	(*block)->size_and_flag += ((((*next)->size_and_flag >> 1) + BLOCK_SIZE) << 1);
+	(*block)->next = (*next)->next;
+	ft_bzero((*next), ((*next)->size_and_flag >> 1) + BLOCK_SIZE);
+	(*next) = NULL;
+};
+
+void	ft_defrag(t_zone **zone, size_t zone_size, t_block *block, t_block *prev)
+{
+	t_block	*tmp;
+
+	if(prev && (prev->size_and_flag & 1) == 1)
+	{
+		ft_printf("prev block is free\n");
+		tmp = block;
+		block = prev;
+		ft_merge_block(&block, &tmp);
+	}
+	if(block->next && (block->next->size_and_flag & 1) == 1)
+	{
+		ft_printf("next block is free\n");
+		tmp = block->next;
+		ft_merge_block(&block, &tmp);
+	}
+	if(block->next == NULL)
+	{
+		ft_printf("im the last block that is free %p\n", block);
+		ft_delete_block(zone, zone_size);
+	}
+};
+
+void	ft_free_block(t_zone **zone, size_t zone_size, void *ptr)
+{
+	t_block	*prev;
+	t_block	*block;
+
+	prev = NULL;
 	block = (*zone)->block;
 	while(block && ((void *)block + BLOCK_SIZE != ptr))
 	{
+		prev = block;
 		block = block->next;
 	}
 	block->size_and_flag = block->size_and_flag ^ 1;
+	ft_defrag(zone, zone_size, block, prev);
 };
 
 int		ft_find_block(void *ptr)
@@ -211,11 +271,11 @@ int		ft_find_block(void *ptr)
 	small_end = small_start + SMALL_ZONE_SIZE - 1;
 	if (tiny_start < ptr && ptr < tiny_end)
 	{
-		ft_free_block(&g_map.tiny, ptr);
+		ft_free_block(&g_map.tiny, TINY_ZONE_SIZE, ptr);
 	}
 	else if (small_start < ptr && ptr < small_end)
 	{
-		ft_free_block(&g_map.small, ptr);
+		ft_free_block(&g_map.small, SMALL_ZONE_SIZE, ptr);
 	}
 	return 0;
 };
@@ -228,7 +288,7 @@ void 	ft_free(void *ptr)
 	}
 	else
 	{
-		ft_printf("im invalid block %p\n", ptr);
+		// ft_printf("im invalid block %p\n", ptr);
 	};
 };
 
@@ -251,7 +311,23 @@ int main(int ac, char **av)
 	// ft_free(s1);
 	// ft_strcpy(p1, "0123456789abcdef~!!");
 	char *p3 = ft_malloc(10);
+	// show_alloc_mem();
+	// ft_free(p1);
+	// show_alloc_mem();
+	// ft_free(p2);
+	// show_alloc_mem();
 	char *p4 = ft_malloc(10);
+	ft_free(p3);
+	// ft_free(p1);
+	show_alloc_mem();
+	ft_free(p2);
+	show_alloc_mem();
+	ft_free(p4);
+	show_alloc_mem();
+	ft_free(p1);
+	show_alloc_mem();
+	// p1 = ft_malloc(1);
+	// ft_free(p4);
 	// p1 = ft_malloc(1);
 	// char *s3 = ft_malloc(512);
 	ft_printf("p1 address : %p\n", p1);
@@ -264,6 +340,10 @@ int main(int ac, char **av)
 	// ft_printf("s3 address : %p\n", s3);
 	// ft_free(s1);
 	// ft_free(s2);
+	// show_alloc_mem();
+	// ft_free(p1);
+	// show_alloc_mem();
+	// ft_free(p2);
 	show_alloc_mem();
 	
 	// char *p1 = malloc(512);
