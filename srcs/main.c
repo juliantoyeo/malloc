@@ -12,7 +12,7 @@
 
 #include "../includes/malloc.h"
 
-t_map g_map = { NULL, NULL, NULL};
+t_map g_map = {NULL, NULL, NULL};
 
 void	ft_print_alloc_mem(t_zone *zone, size_t *total)
 {
@@ -56,9 +56,14 @@ void	show_alloc_mem()
 size_t   ft_align_chunk(size_t len, size_t zone_size)
 {
 	if (zone_size == TINY_ZONE_SIZE)
-		return (((((len)-1)>>4)<<4)+16);
+	{
+		if(len == 0)
+			return (TINY_CHUNK_SIZE);
+		else
+			return ((((len-1)>>4)<<4)+TINY_CHUNK_SIZE);
+	}
 	else
-		return (((((len)-1)>>9)<<9)+512);
+		return ((((len-1)>>9)<<9)+SMALL_CHUNK_SIZE);
 };
 
 // Create a new block
@@ -79,7 +84,7 @@ t_block  *ft_create_block(t_zone *zone, size_t zone_size, size_t size, \
 	}
 	if (((((void *)zone + zone_size) - (void *)new_location)) \
 		< (long)(BLOCK_SIZE + size))
-	return NULL; // not enough size to be given at the new location
+	return (NULL); // not enough size to be given at the new location
 	block = new_location;
 	block->size_and_flag = (size << 1);
 	block->next = NULL;
@@ -171,19 +176,19 @@ void		*ft_alloc_data(t_zone **zone, size_t zone_size, size_t len)
 	return (block + 1);
 };
 
-void    *ft_malloc(size_t len)
+void    *ft_malloc(size_t size)
 {
 	void  *pointer;
 	pointer = NULL;
-	if(len <= 0)
+	if((int)size < 0)
 		return (NULL);
-	if(len <= MAX_TINY_CHUNK_SIZE)
+	if(size <= MAX_TINY_CHUNK_SIZE)
 	{
-		pointer = ft_alloc_data(&g_map.tiny, TINY_ZONE_SIZE, len);
+		pointer = ft_alloc_data(&g_map.tiny, TINY_ZONE_SIZE, size);
 	}
-	else if (len <= MAX_SMALL_CHUNK_SIZE)
+	else if (size <= MAX_SMALL_CHUNK_SIZE)
 	{
-		pointer = ft_alloc_data(&g_map.small, SMALL_ZONE_SIZE, len);
+		pointer = ft_alloc_data(&g_map.small, SMALL_ZONE_SIZE, size);
 	}
 	return (pointer);
 };
@@ -250,11 +255,14 @@ void	ft_defrag(t_zone **zone, size_t zone_size, t_block *block, t_block *prev)
 	}
 };
 
-void	ft_free_block(t_zone **zone, size_t zone_size, void *ptr)
+int		ft_free_block(t_zone **zone, size_t zone_size, void *ptr)
 {
 	t_block	*prev;
 	t_block	*block;
 
+	if(zone == NULL)
+		return (0);
+	// ft_printf("im size : %d\n", zone_size);
 	prev = NULL;
 	block = (*zone)->block;
 	while(block && ((void *)block + BLOCK_SIZE != ptr))
@@ -265,9 +273,10 @@ void	ft_free_block(t_zone **zone, size_t zone_size, void *ptr)
 	block->size_and_flag = block->size_and_flag ^ 1;
 	// (*zone)->remaining += (block->size_and_flag >> 1);
 	ft_defrag(zone, zone_size, block, prev);
+	return (1);
 };
 
-int		ft_find_block(void *ptr)
+t_zone		**ft_find_zone(size_t *size, void *ptr)
 {
 	void	*tiny_start;
 	void	*tiny_end;
@@ -280,25 +289,81 @@ int		ft_find_block(void *ptr)
 	small_end = small_start + SMALL_ZONE_SIZE - 1;
 	if (tiny_start < ptr && ptr < tiny_end)
 	{
-		ft_free_block(&g_map.tiny, TINY_ZONE_SIZE, ptr);
+		(*size) = TINY_ZONE_SIZE;
+		return (&g_map.tiny);
+		// ft_free_block(&g_map.tiny, TINY_ZONE_SIZE, ptr);
 	}
 	else if (small_start < ptr && ptr < small_end)
 	{
-		ft_free_block(&g_map.small, SMALL_ZONE_SIZE, ptr);
+		(*size) = SMALL_ZONE_SIZE;
+		return (&g_map.small);
+		// ft_free_block(&g_map.small, SMALL_ZONE_SIZE, ptr);
 	}
-	return 0;
+	return (NULL);
 };
 
 void 	ft_free(void *ptr)
 {
-	if(ft_find_block(ptr))
+	size_t	zone_size;
+
+	if(ft_free_block(ft_find_zone(&zone_size, ptr), zone_size, ptr))
 	{
 		ft_printf("im valid block %p\n", ptr);
 	}
 	else
 	{
-		// ft_printf("im invalid block %p\n", ptr);
-	};
+		ft_printf("im invalid block %p\n", ptr);
+	}
+};
+
+void	*ft_reallocate_data(t_zone **zone, t_block *block, void *ptr, size_t size)
+{
+	void  *new_ptr;
+	new_ptr = NULL;
+
+	if(block->next == NULL)
+	{
+		(*zone)->remaining += (int)((block->size_and_flag >> 1) - size);
+		block->size_and_flag = (size << 1);
+		new_ptr = ptr;
+	}
+	else
+	{
+		new_ptr = ft_malloc(size);
+		ft_memcpy(new_ptr, ptr, size);
+		ft_printf("im size : %d\n", size);
+		ft_printf("ptr content : %s\n", ptr);
+		ft_printf("new_ptr content : %s\n", new_ptr);
+		ft_free(ptr);
+	}
+	return (new_ptr);
+};
+
+void	*ft_realloc(void *ptr, size_t size)
+{
+	t_zone	**zone;
+	t_block	*block;
+	size_t	zone_size;
+	size_t	aligned_size;
+
+	if(ptr == NULL || (int)size < 0)
+		return ft_malloc(size);
+	zone = ft_find_zone(&zone_size, ptr);
+	if(zone)
+	{
+		aligned_size = ft_align_chunk(size, zone_size);
+		block = (*zone)->block;
+		while(block && ((void *)block + BLOCK_SIZE != ptr))
+			block = block->next;
+		if(block)
+		{
+			if((block->size_and_flag >> 1) == aligned_size)
+				return (ptr);
+			else
+				return (ft_reallocate_data(zone, block, ptr, aligned_size));
+		}
+	}
+	return (NULL);
 };
 
 int main(int ac, char **av)
@@ -310,7 +375,7 @@ int main(int ac, char **av)
 	// ft_malloc(4033);
 	// ft_malloc(1);
 
-	char *p1 = ft_malloc(32);
+	char *p1 = ft_malloc(1);
 	// ft_free(p1);
 	// char *s1 = ft_malloc(1024);
 	// ft_free(s1);
@@ -319,14 +384,27 @@ int main(int ac, char **av)
 	// char *s2 = ft_malloc(1024);
 	// ft_free(s1);
 	// ft_strcpy(p1, "0123456789abcdef~!!");
-	char *p3 = ft_malloc(10);
-	show_alloc_mem();
-	ft_free(p1);
-	show_alloc_mem();
+	char *p3 = ft_malloc(0);
+	// show_alloc_mem();
+	// ft_free(p1);
+	// show_alloc_mem();
 	// ft_free(p2);
 	// show_alloc_mem();
-	char *p4 = ft_malloc(10);
+	char *p4 = ft_malloc(16);
+	show_alloc_mem();
+	ft_strcpy(p4, "0123456789abcdef~!!");
+	// char *str = malloc(1);
+	// ft_printf("str address : %p\n", str);
+	char  *p5 = ft_realloc(p4, 32);
+	// show_alloc_mem();
+	ft_printf("p5 address : %p\n", p5);
+	ft_printf("p5 content : %s\n", p5);
+	ft_printf("p4 content : %s\n", p4);
+	// char *str = malloc(1);
+	// ft_free(str);
 	// ft_free(p3);
+	// ft_free(s1);
+	// ft_free(s2);
 	// show_alloc_mem();
 	// ft_free(p2);
 	// show_alloc_mem();
@@ -354,6 +432,20 @@ int main(int ac, char **av)
 	// ft_free(p2);
 	show_alloc_mem();
 	
+	// char *str = ft_malloc(1);
+	// char *str1 = malloc(17);
+	// char *str2;
+	// ft_strcpy(str1, "0123456789abcdef0");
+	// ft_putstr(str1);
+	// ft_putchar('\n');
+	// str2 = realloc(str, 1);
+	// ft_putstr(str2);
+	// ft_putchar('\n');
+	// ft_printf("str1 address : %p\n", str1);
+	// ft_printf("str2 address : %p\n", str2);
+	// ft_putstr(str1);
+	// ft_putchar('\n');
+	// ft_printf("str1 content : %s\n", str1);
 	// char *p1 = malloc(512);
 	// char *p2 = malloc(16);
 	// char *p3 = malloc(17);
