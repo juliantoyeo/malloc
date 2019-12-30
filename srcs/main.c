@@ -14,14 +14,14 @@
 
 t_map g_map = {NULL, NULL, NULL};
 
-void	ft_print_alloc_mem(t_zone *zone, size_t *total)
+void	ft_print_alloc_mem(t_block *block, size_t *total)
 {
 	void		*start;
 	void		*end;
 	size_t		size;
-	t_block		*block;
+	// t_block		*block;
 
-	block = zone->block;
+	// block = zone->block;
 	while(block)
 	{
 		start = (void *)block + BLOCK_SIZE;
@@ -32,7 +32,7 @@ void	ft_print_alloc_mem(t_zone *zone, size_t *total)
 		ft_printf("im the block free : %d\n", block->size_and_flag & 1);
 		block = block->next;
 	}
-	ft_printf("remaining : %d\n", zone->remaining);
+	// ft_printf("remaining : %d\n", zone->remaining);
 };
 
 void	show_alloc_mem()
@@ -42,10 +42,10 @@ void	show_alloc_mem()
 	total = 0;
 	ft_printf("TINY : %p\n", g_map.tiny);
 	if (g_map.tiny)
-		ft_print_alloc_mem(g_map.tiny, &total);
+		ft_print_alloc_mem(g_map.tiny->block, &total);
 	ft_printf("SMALL : %p\n", g_map.small);
 	if (g_map.small)
-		ft_print_alloc_mem(g_map.small, &total);
+		ft_print_alloc_mem(g_map.small->block, &total);
 	ft_printf("LARGE : %p\n", g_map.large);
 	if (g_map.large)
 		ft_print_alloc_mem(g_map.large, &total);
@@ -60,10 +60,12 @@ size_t   ft_align_chunk(size_t len, size_t zone_size)
 		if(len == 0)
 			return (TINY_CHUNK_SIZE);
 		else
-			return ((((len-1)>>4)<<4)+TINY_CHUNK_SIZE);
+			return ((((len - 1) >> 4) << 4) + TINY_CHUNK_SIZE);
 	}
+	else if (zone_size == SMALL_ZONE_SIZE)
+		return ((((len - 1) >> 9) << 9) + SMALL_CHUNK_SIZE);
 	else
-		return ((((len-1)>>9)<<9)+SMALL_CHUNK_SIZE);
+		return ((((len - 1) >> 12) << 12) + PAGE_SIZE);
 };
 
 // Create a new block
@@ -176,6 +178,30 @@ void		*ft_alloc_data(t_zone **zone, size_t zone_size, size_t len)
 	return (block + 1);
 };
 
+void		*ft_alloc_data_large(t_block **l_block, size_t len)
+{
+	size_t  size;
+	t_block	*new_block;
+	t_block *last_block;
+
+	last_block = (*l_block);
+	size = ft_align_chunk(len + BLOCK_SIZE, PAGE_SIZE);
+	new_block = mmap(0, size, PROT_READ | PROT_WRITE, \
+			MAP_ANON | MAP_PRIVATE, -1, 0);
+	new_block->size_and_flag = ((size - BLOCK_SIZE) << 1);
+	new_block->next = NULL;
+	// This is the first block
+	if((*l_block) == NULL)
+		(*l_block) = new_block;
+	else
+	{
+		while (last_block->next)
+			last_block = last_block->next;
+		last_block->next = new_block;
+	}
+	return (new_block + 1);
+};
+
 void    *ft_malloc(size_t size)
 {
 	void  *pointer;
@@ -189,6 +215,10 @@ void    *ft_malloc(size_t size)
 	else if (size <= MAX_SMALL_CHUNK_SIZE)
 	{
 		pointer = ft_alloc_data(&g_map.small, SMALL_ZONE_SIZE, size);
+	}
+	else
+	{
+		pointer = ft_alloc_data_large(&g_map.large, size);
 	}
 	return (pointer);
 };
@@ -302,6 +332,31 @@ t_zone		**ft_find_zone(size_t *size, void *ptr)
 	return (NULL);
 };
 
+void	ft_free_large(void *ptr)
+{
+	t_block	*prev;
+	t_block	*block;
+
+	prev = NULL;
+	block = g_map.large;
+	while(block && ((void *)block + BLOCK_SIZE != ptr))
+	{
+		prev = block;
+		block = block->next;
+	}
+	if(block)
+	{
+		ft_printf("im found the block %p\n", block);
+		if(block == g_map.large)
+			g_map.large = block->next;
+		else if(prev)
+			prev->next = block->next;
+		munmap(block, ((block->size_and_flag >> 1) + BLOCK_SIZE));
+	}
+	else
+		ft_printf("im invalid block %p\n", ptr);
+};
+
 void 	ft_free(void *ptr)
 {
 	size_t	zone_size;
@@ -312,7 +367,8 @@ void 	ft_free(void *ptr)
 	}
 	else
 	{
-		ft_printf("im invalid block %p\n", ptr);
+		ft_printf("i might be large block\n");
+		ft_free_large(ptr);
 	}
 };
 
@@ -321,6 +377,7 @@ void	*ft_reallocate_data(t_zone **zone, t_block *block, void *ptr, size_t size)
 	void  *new_ptr;
 	new_ptr = NULL;
 
+	// this is the last block, just need to change the block size;
 	if(block->next == NULL)
 	{
 		(*zone)->remaining += (int)((block->size_and_flag >> 1) - size);
@@ -334,6 +391,26 @@ void	*ft_reallocate_data(t_zone **zone, t_block *block, void *ptr, size_t size)
 		ft_printf("im size : %d\n", size);
 		ft_printf("ptr content : %s\n", ptr);
 		ft_printf("new_ptr content : %s\n", new_ptr);
+		ft_free(ptr);
+	}
+	return (new_ptr);
+};
+
+void	*ft_reallocate_large_data(void *ptr, size_t size)
+{
+	t_block	*block;
+	void		*new_ptr;
+	// size_t	aligned_size;
+
+	new_ptr = NULL;
+	block = g_map.large;
+	// aligned_size = ft_align_chunk(size, PAGE_SIZE);
+	while(block && ((void *)block + BLOCK_SIZE != ptr))
+		block = block->next;
+	if(block)
+	{
+		new_ptr = ft_malloc(size);
+		new_ptr = ft_memcpy(new_ptr, ptr, size);
 		ft_free(ptr);
 	}
 	return (new_ptr);
@@ -363,6 +440,8 @@ void	*ft_realloc(void *ptr, size_t size)
 				return (ft_reallocate_data(zone, block, ptr, aligned_size));
 		}
 	}
+	else
+		return (ft_reallocate_large_data(ptr, size));
 	return (NULL);
 };
 
@@ -375,31 +454,32 @@ int main(int ac, char **av)
 	// ft_malloc(4033);
 	// ft_malloc(1);
 
+	// ft_printf("Im the aligned size : %d\n", ft_align_chunk(ft_atoi(av[1]), ft_atoi(av[2])));
 	char *p1 = ft_malloc(1);
 	// ft_free(p1);
-	// char *s1 = ft_malloc(1024);
+	char *s1 = ft_malloc(1024);
 	// ft_free(s1);
 	char *p2 = ft_malloc(17);
 	// ft_free(p1);
-	// char *s2 = ft_malloc(1024);
+	char *s2 = ft_malloc(1024);
 	// ft_free(s1);
 	// ft_strcpy(p1, "0123456789abcdef~!!");
-	char *p3 = ft_malloc(0);
+	// char *p3 = ft_malloc(0);
 	// show_alloc_mem();
 	// ft_free(p1);
 	// show_alloc_mem();
 	// ft_free(p2);
 	// show_alloc_mem();
-	char *p4 = ft_malloc(16);
-	show_alloc_mem();
-	ft_strcpy(p4, "0123456789abcdef~!!");
+	// char *p4 = ft_malloc(16);
+	// show_alloc_mem();
+	// ft_strcpy(p4, "0123456789abcdef~!!");///
 	// char *str = malloc(1);
 	// ft_printf("str address : %p\n", str);
-	char  *p5 = ft_realloc(p4, 32);
+	// char  *p5 = ft_realloc(p4, 32);
 	// show_alloc_mem();
-	ft_printf("p5 address : %p\n", p5);
-	ft_printf("p5 content : %s\n", p5);
-	ft_printf("p4 content : %s\n", p4);
+	// ft_printf("p5 address : %p\n", p5);
+	// ft_printf("p5 content : %s\n", p5);
+	// ft_printf("p4 content : %s\n", p4);
 	// char *str = malloc(1);
 	// ft_free(str);
 	// ft_free(p3);
@@ -416,14 +496,34 @@ int main(int ac, char **av)
 	// ft_free(p4);
 	// p1 = ft_malloc(1);
 	// char *s3 = ft_malloc(512);
+	char *l1 = ft_malloc(4097);
+	char *l2 = ft_malloc(4097);
+	
+	// char *str = malloc(1);
+	show_alloc_mem();
+	ft_printf("^Initial================================\n");
+	ft_strcpy(l2, "0123456789abcdef~!!");
+	char *l3 = ft_realloc(l2, 10);
+	ft_printf("l3 content : %s\n", l3);
+	show_alloc_mem();
+	ft_printf("^after realloc================================\n");
+	// ft_free(l1);
+	// show_alloc_mem();
+	// ft_printf("^after free l1================================\n");
+	// l1 = ft_malloc(8179);
+	// show_alloc_mem();
+	// ft_printf("^after malloc l1 again================================\n");
 	ft_printf("p1 address : %p\n", p1);
-	// ft_printf("s1 address : %p\n", s1);
+	ft_printf("s1 address : %p\n", s1);
 	// ft_printf("p1 content : %s\n", p1);
 	ft_printf("p2 address : %p\n", p2);
-	// ft_printf("s2 address : %p\n", s2);
-	ft_printf("p3 address : %p\n", p3);
-	ft_printf("p4 address : %p\n", p4);
+	ft_printf("s2 address : %p\n", s2);
+	// ft_printf("p3 address : %p\n", p3);
+	// ft_printf("p4 address : %p\n", p4);
 	// ft_printf("s3 address : %p\n", s3);
+	ft_printf("l1 address : %p\n", l1);
+	ft_printf("l2 address : %p\n", l2);
+	ft_printf("l3 address : %p\n", l3);
 	// ft_free(s1);
 	// ft_free(s2);
 	// show_alloc_mem();

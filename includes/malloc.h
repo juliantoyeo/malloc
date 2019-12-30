@@ -22,7 +22,8 @@
 # define MAX_TINY_CHUNK_SIZE 496
 # define SMALL_ZONE_SIZE (4096 * 32)
 # define SMALL_CHUNK_SIZE 512
-# define MAX_SMALL_CHUNK_SIZE 4080
+# define MAX_SMALL_CHUNK_SIZE 4096
+# define PAGE_SIZE 4096
 
 typedef	struct		s_block
 {
@@ -40,7 +41,7 @@ typedef struct		s_map
 {
 	t_zone			*tiny;
 	t_zone			*small;
-	t_zone			*large;
+	t_block			*large;
 }					t_map;
 
 extern t_map		g_map;
