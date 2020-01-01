@@ -174,7 +174,7 @@ void		*ft_alloc_data(t_zone **zone, size_t zone_size, size_t len)
 	ft_get_block((*zone), zone_size, size, &block);
 	if(block == NULL)
 		return (NULL);
-	ft_printf("remaining : %d\n", (*zone)->remaining);
+	// ft_printf("remaining : %d\n", (*zone)->remaining);
 	return (block + 1);
 };
 
@@ -242,9 +242,18 @@ void	ft_delete_block(t_zone **zone, size_t zone_size)
 		prev->next = block;
 	else
 	{
+		zone_size = 0;
 		//if the program reach this point, means that the current block is the last free block in the zone, and the whole zone should be unmapped
+		(*zone)->block = NULL;
+		// (*zone) = NULL;
+		// ft_printf("im here the zone location %p\n", zone);
+		// ft_printf("im here the zone location %p\n", (*zone));
 		munmap((*zone), zone_size);
-		(*zone) = NULL;
+		// ft_printf("%d\n", zone_size);
+		// (*zone) = NULL;
+		// ft_printf("im here\n");
+		// munmap(g_map.small, zone_size);
+		// g_map.small = NULL;
 	}
 };
 
@@ -264,7 +273,7 @@ void	ft_defrag(t_zone **zone, size_t zone_size, t_block *block, t_block *prev)
 	size_freed = (block->size_and_flag >> 1);
 	if(prev && (prev->size_and_flag & 1) == 1)
 	{
-		ft_printf("prev block is free\n");
+		// ft_printf("prev block is free\n");
 		tmp = block;
 		block = prev;
 		ft_merge_block(&block, &tmp);
@@ -272,7 +281,7 @@ void	ft_defrag(t_zone **zone, size_t zone_size, t_block *block, t_block *prev)
 	}
 	if(block->next && (block->next->size_and_flag & 1) == 1)
 	{
-		ft_printf("next block is free\n");
+		// ft_printf("next block is free\n");
 		tmp = block->next;
 		ft_merge_block(&block, &tmp);
 		size_freed += BLOCK_SIZE;
@@ -280,7 +289,7 @@ void	ft_defrag(t_zone **zone, size_t zone_size, t_block *block, t_block *prev)
 	(*zone)->remaining += size_freed;
 	if(block->next == NULL)
 	{
-		ft_printf("im the last block that is free %p\n", block);
+		// ft_printf("im the last block that is free %p\n", block);
 		ft_delete_block(zone, zone_size);
 	}
 };
@@ -300,9 +309,22 @@ int		ft_free_block(t_zone **zone, size_t zone_size, void *ptr)
 		prev = block;
 		block = block->next;
 	}
-	block->size_and_flag = block->size_and_flag ^ 1;
+	if(block)
+	{
+		block->size_and_flag = block->size_and_flag ^ 1;
+		ft_defrag(zone, zone_size, block, prev);
+	}
+	else
+		return (0);
 	// (*zone)->remaining += (block->size_and_flag >> 1);
-	ft_defrag(zone, zone_size, block, prev);
+	
+	// ft_printf("im zone %p\n", (*zone));
+	// (*zone) = NULL;
+	// ft_printf("im zone-block %p\n", (*zone)->block);
+	// if((*zone))
+	// {
+	// 	ft_printf("i have block\n");
+	// }
 	return (1);
 };
 
@@ -346,7 +368,7 @@ void	ft_free_large(void *ptr)
 	}
 	if(block)
 	{
-		ft_printf("im found the block %p\n", block);
+		// ft_printf("im found the block %p\n", block);
 		if(block == g_map.large)
 			g_map.large = block->next;
 		else if(prev)
@@ -363,11 +385,11 @@ void 	ft_free(void *ptr)
 
 	if(ft_free_block(ft_find_zone(&zone_size, ptr), zone_size, ptr))
 	{
-		ft_printf("im valid block %p\n", ptr);
+		// ft_printf("im valid block %p\n", ptr);
 	}
 	else
 	{
-		ft_printf("i might be large block\n");
+		// ft_printf("i might be large block\n");
 		ft_free_large(ptr);
 	}
 };
@@ -388,9 +410,6 @@ void	*ft_reallocate_data(t_zone **zone, t_block *block, void *ptr, size_t size)
 	{
 		new_ptr = ft_malloc(size);
 		ft_memcpy(new_ptr, ptr, size);
-		ft_printf("im size : %d\n", size);
-		ft_printf("ptr content : %s\n", ptr);
-		ft_printf("new_ptr content : %s\n", new_ptr);
 		ft_free(ptr);
 	}
 	return (new_ptr);
@@ -400,7 +419,7 @@ void	*ft_reallocate_large_data(void *ptr, size_t size)
 {
 	t_block	*block;
 	void		*new_ptr;
-	// size_t	aligned_size;
+	size_t	copy_size;
 
 	new_ptr = NULL;
 	block = g_map.large;
@@ -409,8 +428,12 @@ void	*ft_reallocate_large_data(void *ptr, size_t size)
 		block = block->next;
 	if(block)
 	{
+		if((block->size_and_flag >> 1) > size)
+			copy_size = size;
+		else
+			copy_size = (block->size_and_flag >> 1);
 		new_ptr = ft_malloc(size);
-		new_ptr = ft_memcpy(new_ptr, ptr, size);
+		new_ptr = ft_memcpy(new_ptr, ptr, (block->size_and_flag >> 1));
 		ft_free(ptr);
 	}
 	return (new_ptr);
@@ -499,6 +522,7 @@ int main(int ac, char **av)
 	char *l1 = ft_malloc(4097);
 	char *l2 = ft_malloc(4097);
 	
+
 	// char *str = malloc(1);
 	show_alloc_mem();
 	ft_printf("^Initial================================\n");
