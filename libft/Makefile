@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: jyeo <marvin@42.fr>                        +#+  +:+       +#+         #
+#    By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2017/11/11 14:15:58 by jyeo              #+#    #+#              #
-#    Updated: 2018/01/25 00:00:51 by jyeo             ###   ########.fr        #
+#    Updated: 2020/01/02 16:45:56 by jyeo             ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -127,13 +127,13 @@ $(NAME): $(ALL_OBJ)
 	@ranlib $(NAME)
 
 $(LIBFT_OBJ): %.o: %.c
-	$(CC) $(FLAG) $(INCLUDES) -c $^ -o $@
+	@$(CC) $(FLAG) $(INCLUDES) -c $^ -o $@
 
 $(GNL_OBJ): %.o: %.c
-	$(CC) $(FLAG) $(INCLUDES) -c $^ -o $@
+	@$(CC) $(FLAG) $(INCLUDES) -c $^ -o $@
 
 $(PRINTF_OBJ): %.o: %.c
-	$(CC) $(FLAG) $(INCLUDES) -c $^ -o $@
+	@$(CC) $(FLAG) $(INCLUDES) -c $^ -o $@
 
 clean:
 	@/bin/rm -f $(ALL_OBJ)

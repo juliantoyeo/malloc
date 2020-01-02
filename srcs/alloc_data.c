@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*  alloc_data.c                                        :+:      :+:    :+:   */
+/*   alloc_data.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jyeo <marvin@42.fr>                        +#+  +:+       +#+        */
+/*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/09 21:22:09 by jyeo              #+#    #+#             */
-/*   Updated: 2019/12/09 21:24:35 by jyeo             ###   ########.fr       */
+/*   Updated: 2020/01/02 17:02:19 by jyeo             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,12 @@
 
 // Create a new block
 static t_block	*ft_create_block(t_zone *zone, size_t zone_size, size_t size, \
-  t_block *prev_block)
+	t_block *prev_block)
 {
-	void    	*new_location;
-	t_block 	*block;
+	void		*new_location;
+	t_block		*block;
 
-	// If this is the 1st block, the new location is base on the start of the zone + the size of zone struct 
+	// If this is the 1st block, the new location is base on the start of the zone + the size of zone struct
 	if (zone->block == NULL)
 		new_location = (void *)zone + sizeof(t_zone);
 	else
@@ -38,18 +38,18 @@ static t_block	*ft_create_block(t_zone *zone, size_t zone_size, size_t size, \
 		zone->block = block;
 	zone->remaining -= (size + BLOCK_SIZE);
 	return (block);
-};
+}
 
-static void    	ft_create_zone(t_zone **zone, size_t zone_size)
+static void		ft_create_zone(t_zone **zone, size_t zone_size)
 {
-	void    	*page;
+	void		*page;
 
 	page = mmap(0, zone_size, PROT_READ | PROT_WRITE, \
 			MAP_ANON | MAP_PRIVATE, -1, 0);
 	(*zone) = page;
 	(*zone)->remaining = zone_size - sizeof(t_zone);
 	(*zone)->block = NULL;
-};
+}
 
 static void		ft_split_block(t_zone *zone, t_block *block, size_t zone_size, \
 	size_t size)
@@ -69,18 +69,19 @@ static void		ft_split_block(t_zone *zone, t_block *block, size_t zone_size, \
 	// If the remaining size is enough to store even a metadata block, we split it and set the new block as free
 	if (remaining >= BLOCK_SIZE)
 	{
-		new_block = ft_create_block(zone, zone_size, remaining - BLOCK_SIZE, block);
+		new_block = ft_create_block(zone, zone_size, remaining \
+			- BLOCK_SIZE, block);
 		new_block->size_and_flag ^= 1;
 		new_block->next = block->next;
 		block->next = new_block;
 		zone->remaining += (new_block->size_and_flag >> 1);
 	}
-};
+}
 
 static void		ft_get_block(t_zone *zone, size_t zone_size, size_t size, \
 	t_block **block)
 {
-	t_block 	*prev;
+	t_block		*prev;
 
 	prev = NULL;
 	// iterate to find a free block, if it is free, check if the size is correct, if not iterate till the end of the chain
@@ -91,32 +92,32 @@ static void		ft_get_block(t_zone *zone, size_t zone_size, size_t size, \
 		(*block) = (*block)->next;
 	};
 	// No free block to be use, create a new block and add it to the end of the chain list
-	if((*block) == NULL)
+	if ((*block) == NULL)
 	{
 		(*block) = ft_create_block(zone, zone_size, size, prev);
 		if (prev)
 			prev->next = (*block);
 	}
-	// Found a free block, assign the new size and check if the remaining size is splitable 
+	/* Found a free block, assign the new size and check if the remaining size is splitable */
 	else
 	{
 		ft_split_block(zone, (*block), zone_size, size);
 	}
-};
+}
 
-void		*ft_alloc_data(t_zone **zone, size_t zone_size, size_t len)
+void			*ft_alloc_data(t_zone **zone, size_t zone_size, size_t len)
 {
-	size_t  size;
-	t_block *block;
+	size_t		size;
+	t_block		*block;
 
 	if ((*zone) == NULL)
 		ft_create_zone(zone, zone_size);
 	block = (*zone)->block;
 	size = ft_align_chunk(len, zone_size);
 	if ((*zone)->remaining < size)
-    	return (NULL); // not enough size to be given
+		return (NULL); // not enough size to be given
 	ft_get_block((*zone), zone_size, size, &block);
-	if(block == NULL)
+	if (block == NULL)
 		return (NULL);
 	return (block + 1);
-};
+}

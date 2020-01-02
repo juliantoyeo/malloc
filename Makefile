@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: jyeo <marvin@42.fr>                        +#+  +:+       +#+         #
+#    By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/12/09 14:15:58 by jyeo              #+#    #+#              #
-#    Updated: 2019/12/09 20:00:51 by jyeo             ###   ########.fr        #
+#    Updated: 2020/01/02 17:05:39 by jyeo             ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -41,14 +41,14 @@ lib:
 	@make -C libft/
 
 $(NAME): $(OBJ)
-	$(CC) $(FLAG) $(OBJ) $(LIBS) -shared -o $(NAME)
+	@$(CC) $(FLAG) $(OBJ) $(LIBS) -shared -o $(NAME)
 	@/bin/rm -f $(LINK)
-	ln -s $(NAME) $(LINK)
+	@ln -s $(NAME) $(LINK)
 
 $(OBJ): %.o: %.c
-	$(CC) $(FLAG) $(INCLUDES) -c $< -o $@
+	@$(CC) $(FLAG) $(INCLUDES) -c $< -o $@
 
-test: $(NAME)
+test: lib $(NAME)
 	$(CC) $(INCLUDES) -w -L. -lft_malloc test/test0.c -o test0
 	$(CC) $(INCLUDES) -w -L. -lft_malloc test/test1.c -o test1
 	$(CC) $(INCLUDES) -w -L. -lft_malloc test/test2.c -o test2

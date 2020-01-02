@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   show_alloc_mem.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jyeo <marvin@42.fr>                        +#+  +:+       +#+        */
+/*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/09 21:22:09 by jyeo              #+#    #+#             */
-/*   Updated: 2019/12/09 21:24:35 by jyeo             ###   ########.fr       */
+/*   Updated: 2020/01/02 17:03:08 by jyeo             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ static void	ft_print_alloc_mem(t_block *block, size_t *total)
 	void	*end;
 	size_t	size;
 
-	while(block)
+	while (block)
 	{
 		start = (void *)block + BLOCK_SIZE;
 		end = start + (block->size_and_flag >> 1);
@@ -29,9 +29,9 @@ static void	ft_print_alloc_mem(t_block *block, size_t *total)
 		// printf("im the block free : %d\n", block->size_and_flag & 1);
 		block = block->next;
 	}
-};
+}
 
-void		show_alloc_mem()
+void		show_alloc_mem(void)
 {
 	size_t	total;
 
@@ -46,4 +46,4 @@ void		show_alloc_mem()
 	if (g_map.large)
 		ft_print_alloc_mem(g_map.large, &total);
 	printf("Total : %zu bytes\n", total);
-};
+}

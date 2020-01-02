@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   malloc.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jyeo <marvin@42.fr>                        +#+  +:+       +#+        */
+/*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/12/09 21:22:09 by jyeo              #+#    #+#             */
-/*   Updated: 2019/12/09 21:24:35 by jyeo             ###   ########.fr       */
+/*   Created: 2020/01/02 16:25:44 by jyeo              #+#    #+#             */
+/*   Updated: 2020/01/02 16:35:17 by jyeo             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ static void	*ft_alloc_data_large(t_block **l_block, size_t len)
 	new_block->size_and_flag = ((size - BLOCK_SIZE) << 1);
 	new_block->next = NULL;
 	// This is the first block
-	if((*l_block) == NULL)
+	if ((*l_block) == NULL)
 		(*l_block) = new_block;
 	else
 	{
@@ -36,17 +36,17 @@ static void	*ft_alloc_data_large(t_block **l_block, size_t len)
 		last_block->next = new_block;
 	}
 	return (new_block + 1);
-};
+}
 
-void    	*malloc(size_t size)
+void		*malloc(size_t size)
 {
 	void	*pointer;
-	pointer = NULL;
 
-	if((int)size < 0)
+	pointer = NULL;
+	if ((int)size < 0)
 		return (NULL);
 	// ft_putstr("im here\n");
-	if(size <= MAX_TINY_CHUNK_SIZE)
+	if (size <= MAX_TINY_CHUNK_SIZE)
 	{
 		pointer = ft_alloc_data(&g_map.tiny, TINY_ZONE_SIZE, size);
 	}
@@ -59,4 +59,4 @@ void    	*malloc(size_t size)
 		pointer = ft_alloc_data_large(&g_map.large, size);
 	}
 	return (pointer);
-};
+}
