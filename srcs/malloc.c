@@ -6,13 +6,14 @@
 /*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/02 16:25:44 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/02 16:35:17 by jyeo             ###   ########.fr       */
+/*   Updated: 2020/01/02 21:07:01 by jyeo             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/malloc.h"
 
 t_map g_map = {NULL, NULL, NULL};
+pthread_mutex_t	g_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static void	*ft_alloc_data_large(t_block **l_block, size_t len)
 {
@@ -45,7 +46,9 @@ void		*malloc(size_t size)
 	pointer = NULL;
 	if ((int)size < 0)
 		return (NULL);
-	// ft_putstr("im here\n");
+	// ft_putnbr(size);
+	// ft_putstr("im here in malloc\n");
+	pthread_mutex_lock(&g_lock);
 	if (size <= MAX_TINY_CHUNK_SIZE)
 	{
 		pointer = ft_alloc_data(&g_map.tiny, TINY_ZONE_SIZE, size);
@@ -58,5 +61,6 @@ void		*malloc(size_t size)
 	{
 		pointer = ft_alloc_data_large(&g_map.large, size);
 	}
+	pthread_mutex_unlock(&g_lock);
 	return (pointer);
 }

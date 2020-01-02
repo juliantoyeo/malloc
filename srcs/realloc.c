@@ -6,7 +6,7 @@
 /*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/09 21:22:09 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/02 17:04:47 by jyeo             ###   ########.fr       */
+/*   Updated: 2020/01/02 21:28:46 by jyeo             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ static void	*ft_reallocate_large_data(void *ptr, size_t size)
 		else
 			copy_size = (block->size_and_flag >> 1);
 		new_ptr = malloc(size);
-		new_ptr = ft_memcpy(new_ptr, ptr, (block->size_and_flag >> 1));
+		ft_memcpy(new_ptr, ptr, (block->size_and_flag >> 1));
 		free(ptr);
 	}
 	return (new_ptr);

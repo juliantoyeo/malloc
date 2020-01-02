@@ -6,7 +6,7 @@
 #    By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/12/09 14:15:58 by jyeo              #+#    #+#              #
-#    Updated: 2020/01/02 17:05:39 by jyeo             ###   ########.fr        #
+#    Updated: 2020/01/02 17:57:58 by jyeo             ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,6 +17,8 @@ endif
 NAME = libft_malloc_$(HOSTTYPE).so
 
 LINK = libft_malloc.so
+
+LIB = libft
 
 MALLOC = malloc
 
@@ -41,7 +43,7 @@ lib:
 	@make -C libft/
 
 $(NAME): $(OBJ)
-	@$(CC) $(FLAG) $(OBJ) $(LIBS) -shared -o $(NAME)
+	$(CC) $(FLAG) $(OBJ) $(LIBS) -shared -o $(NAME)
 	@/bin/rm -f $(LINK)
 	@ln -s $(NAME) $(LINK)
 
@@ -57,9 +59,9 @@ test: lib $(NAME)
 	$(CC) $(INCLUDES) -w -L. -lft_malloc test/test4.c -o test4
 	$(CC) $(INCLUDES) -w -L. -lft_malloc test/test5.c -o test5
 	@echo test0 ===================================================
-	@/usr/bin/time -l ./test0
+	@sh run.sh /usr/bin/time -l ./test0
 	@echo test1 ===================================================
-	@/usr/bin/time -l ./test1
+	@sh run.sh /usr/bin/time -l ./test1
 	@echo test2 ===================================================
 	@sh run.sh /usr/bin/time -l ./test2
 	@echo test3 ===================================================

@@ -6,7 +6,7 @@
 /*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/09 21:22:09 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/02 17:06:25 by jyeo             ###   ########.fr       */
+/*   Updated: 2020/01/02 21:13:15 by jyeo             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,6 +104,7 @@ void		free(void *ptr)
 
 	prev = NULL;
 	block = g_map.large;
+	pthread_mutex_lock(&g_lock);
 	if (ft_free_block(ft_find_zone(&zone_size, ptr), zone_size, ptr) == 0)
 	{
 		while (block && ((void *)block + BLOCK_SIZE != ptr))
@@ -122,4 +123,5 @@ void		free(void *ptr)
 		// else
 		// 	ft_printf("im invalid block %p\n", ptr);
 	}
+	pthread_mutex_unlock(&g_lock);
 }
