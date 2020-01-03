@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+         #
+#    By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2017/11/11 14:15:58 by jyeo              #+#    #+#              #
-#    Updated: 2020/01/02 16:45:56 by jyeo             ###   ########.fr        #
+#    Updated: 2020/01/03 22:56:29 by juliantoyeo      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -97,6 +97,7 @@ LIBFT_SRC = 		libft/ft_atoi.c\
       				libft/ft_valid_int.c\
       				libft/ft_double_len.c\
       				libft/ft_double_rev.c\
+					libft/ft_print_base.c\
 							libft/ft_sqrt.c\
 
 GNL_SRC = 			get_next_line/get_next_line.c\

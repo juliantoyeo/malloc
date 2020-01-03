@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   test_thread_realloc.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/02 19:39:30 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/02 21:23:07 by jyeo             ###   ########.fr       */
+/*   Updated: 2020/01/04 00:18:31 by juliantoyeo      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 void		*test_realloc(void *ptr)
 {
-	realloc(ptr, 4097);
+	realloc(ptr, 1024);
 	return NULL;
 }
 
@@ -27,10 +27,10 @@ int			main(void)
 
 	i = 0;
 	pthread_t tid[4];
-	ptr[0] = malloc(1);
-	ptr[1] = malloc(1);
-	ptr[2] = malloc(1);
-	ptr[3] = malloc(1);
+	ptr[0] = malloc(4099);
+	ptr[1] = malloc(4099);
+	ptr[2] = malloc(4099);
+	ptr[3] = malloc(4099);
 	show_alloc_mem();
 	while (i < 4)
 	{

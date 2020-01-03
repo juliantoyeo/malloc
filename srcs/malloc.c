@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   malloc.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/02 16:25:44 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/02 21:07:01 by jyeo             ###   ########.fr       */
+/*   Updated: 2020/01/04 00:15:23 by juliantoyeo      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,8 +46,6 @@ void		*malloc(size_t size)
 	pointer = NULL;
 	if ((int)size < 0)
 		return (NULL);
-	// ft_putnbr(size);
-	// ft_putstr("im here in malloc\n");
 	pthread_mutex_lock(&g_lock);
 	if (size <= MAX_TINY_CHUNK_SIZE)
 	{

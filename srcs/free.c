@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   free.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/09 21:22:09 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/02 21:13:15 by jyeo             ###   ########.fr       */
+/*   Updated: 2020/01/04 00:25:06 by juliantoyeo      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,8 +103,8 @@ void		free(void *ptr)
 	t_block	*block;
 
 	prev = NULL;
-	block = g_map.large;
 	pthread_mutex_lock(&g_lock);
+	block = g_map.large;
 	if (ft_free_block(ft_find_zone(&zone_size, ptr), zone_size, ptr) == 0)
 	{
 		while (block && ((void *)block + BLOCK_SIZE != ptr))

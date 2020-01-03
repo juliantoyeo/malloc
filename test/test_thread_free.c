@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   test_thread_free.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/02 19:39:30 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/02 21:18:55 by jyeo             ###   ########.fr       */
+/*   Updated: 2020/01/03 23:06:06 by juliantoyeo      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 void		*test_malloc_free(void *ptr)
 {
 	free(ptr);
+	show_alloc_mem();
 	return NULL;
 }
 
@@ -34,6 +35,7 @@ int			main(void)
 	while (i < 4)
 	{
 		pthread_create(&tid[i], NULL, test_malloc_free, ptr[i]);
+		
 		i++;
 	}
 	i = 0;
