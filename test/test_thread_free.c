@@ -6,7 +6,7 @@
 /*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/02 19:39:30 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/03 23:06:06 by juliantoyeo      ###   ########.fr       */
+/*   Updated: 2020/01/04 02:43:03 by juliantoyeo      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 void		*test_malloc_free(void *ptr)
 {
 	free(ptr);
-	show_alloc_mem();
+	show_alloc_mem_free();
 	return NULL;
 }
 
@@ -44,6 +44,6 @@ int			main(void)
 		pthread_join(tid[i], NULL);
 		i++;
 	}
-	show_alloc_mem();
+	show_alloc_mem_free();
 	return (0);
 }

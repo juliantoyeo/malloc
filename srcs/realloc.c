@@ -6,12 +6,12 @@
 /*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/09 21:22:09 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/04 00:24:34 by juliantoyeo      ###   ########.fr       */
+/*   Updated: 2020/01/04 00:52:07 by juliantoyeo      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/malloc.h"
-#include <stdio.h>
+
 static void *ft_reallocate(t_block *block, void *ptr, size_t size)
 {
 	void	*new_ptr;
@@ -29,7 +29,6 @@ static void *ft_reallocate(t_block *block, void *ptr, size_t size)
 		ft_memcpy(new_ptr, ptr, copy_size);
 		free(ptr);
 	}
-	printf("im here %p\n", new_ptr);
 	return (new_ptr);
 }
 
@@ -69,7 +68,6 @@ static void	*ft_reallocate_large_data(void *ptr, size_t size)
 	aligned_size = ft_align_chunk(size, PAGE_SIZE);
 	while (block && ((void *)block + BLOCK_SIZE != ptr))
 		block = block->next;
-	printf("im here old ptr %p\n", ptr);
 	if (block)
 	{
 		if ((block->size_and_flag >> 1) == (aligned_size - BLOCK_SIZE))

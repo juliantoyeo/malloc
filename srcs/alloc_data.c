@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   alloc_data.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/09 21:22:09 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/02 17:02:19 by jyeo             ###   ########.fr       */
+/*   Updated: 2020/01/04 02:39:43 by juliantoyeo      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,8 @@ static void		ft_create_zone(t_zone **zone, size_t zone_size)
 
 	page = mmap(0, zone_size, PROT_READ | PROT_WRITE, \
 			MAP_ANON | MAP_PRIVATE, -1, 0);
+	if (page == MAP_FAILED)
+		return ;
 	(*zone) = page;
 	(*zone)->remaining = zone_size - sizeof(t_zone);
 	(*zone)->block = NULL;
@@ -54,27 +56,26 @@ static void		ft_create_zone(t_zone **zone, size_t zone_size)
 static void		ft_split_block(t_zone *zone, t_block *block, size_t zone_size, \
 	size_t size)
 {
-	int			min_size;
 	int			remaining;
 	t_block		*new_block;
 
-	if (zone_size == TINY_ZONE_SIZE)
-		min_size = BLOCK_SIZE + TINY_CHUNK_SIZE;
-	else
-		min_size = BLOCK_SIZE + SMALL_CHUNK_SIZE;
 	remaining = (block->size_and_flag >> 1) - size;
-	// After the remaining size is calculated, assign the new allocated size to the block
-	block->size_and_flag = (size << 1);
-	zone->remaining -= size;
 	// If the remaining size is enough to store even a metadata block, we split it and set the new block as free
+	// If not, don't split it, its better to give a bigger size then risk of lost track of metadata
 	if (remaining >= BLOCK_SIZE)
 	{
 		new_block = ft_create_block(zone, zone_size, remaining \
 			- BLOCK_SIZE, block);
-		new_block->size_and_flag ^= 1;
-		new_block->next = block->next;
-		block->next = new_block;
-		zone->remaining += (new_block->size_and_flag >> 1);
+		if (new_block != NULL)
+		{
+			// After the remaining size is calculated, assign the new allocated size to the block
+			block->size_and_flag = (size << 1);
+			zone->remaining -= size;
+			new_block->size_and_flag ^= 1;
+			new_block->next = block->next;
+			block->next = new_block;
+			zone->remaining += (new_block->size_and_flag >> 1);
+		}
 	}
 }
 
@@ -111,7 +112,14 @@ void			*ft_alloc_data(t_zone **zone, size_t zone_size, size_t len)
 	t_block		*block;
 
 	if ((*zone) == NULL)
+	{
 		ft_create_zone(zone, zone_size);
+		if ((*zone) == NULL)
+		{
+			ft_print_error(INSUFFICENT, 0);
+			return (NULL); // mmap failed
+		}	
+	}
 	block = (*zone)->block;
 	size = ft_align_chunk(len, zone_size);
 	if ((*zone)->remaining < size)

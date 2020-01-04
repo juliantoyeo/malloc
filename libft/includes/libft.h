@@ -6,7 +6,7 @@
 /*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/11 14:10:40 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/03 22:50:43 by juliantoyeo      ###   ########.fr       */
+/*   Updated: 2020/01/04 02:00:48 by juliantoyeo      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,6 +104,6 @@ int					ft_valid_int(char *str);
 size_t				ft_double_len(void **ptr);
 void				ft_double_rev(void **ptr);
 int					ft_sqrt(int nb);
-void    			ft_print_base(long num, int base);
+void    			ft_print_base(int64_t num, int base);
 
 #endif
