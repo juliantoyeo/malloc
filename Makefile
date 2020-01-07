@@ -6,7 +6,7 @@
 #    By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/12/09 14:15:58 by jyeo              #+#    #+#              #
-#    Updated: 2020/01/04 02:21:04 by juliantoyeo      ###   ########.fr        #
+#    Updated: 2020/01/05 20:57:28 by juliantoyeo      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -43,7 +43,7 @@ lib:
 	@make -C libft/
 
 $(NAME): $(OBJ)
-	$(CC) $(FLAG) $(OBJ) $(LIBS) -shared -o $(NAME)
+	@$(CC) $(FLAG) $(OBJ) $(LIBS) -shared -o $(NAME)
 	@/bin/rm -f $(LINK)
 	@ln -s $(NAME) $(LINK)
 

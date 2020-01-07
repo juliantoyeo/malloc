@@ -6,7 +6,7 @@
 /*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/09 21:20:19 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/04 02:39:32 by juliantoyeo      ###   ########.fr       */
+/*   Updated: 2020/01/05 20:39:20 by juliantoyeo      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,7 @@
 # define MALLOC_H
 # include <sys/mman.h>
 # include <pthread.h>
-# include "../libft/includes/ft_printf.h"
 # include "../libft/includes/libft.h"
-# include "../libft/includes/get_next_line.h"
 # define BLOCK_SIZE 16
 # define TINY_ZONE_SIZE 1048576
 # define TINY_CHUNK_SIZE 16
