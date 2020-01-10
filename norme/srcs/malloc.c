@@ -6,7 +6,7 @@
 /*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/02 16:25:44 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/08 18:18:55 by jyeo             ###   ########.fr       */
+/*   Updated: 2020/01/08 18:17:53 by jyeo             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,6 @@ static void	*ft_alloc_data_large(t_block **l_block, size_t len)
 	}
 	new_block->size_and_flag = ((size - BLOCK_SIZE) << 1);
 	new_block->next = NULL;
-	// This is the first block
 	if ((*l_block) == NULL)
 		(*l_block) = new_block;
 	else
