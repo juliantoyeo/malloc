@@ -6,7 +6,7 @@
 /*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/09 21:22:09 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/04 02:20:39 by juliantoyeo      ###   ########.fr       */
+/*   Updated: 2020/01/18 02:33:11 by juliantoyeo      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,6 +105,9 @@ void		free(void *ptr)
 	prev = NULL;
 	pthread_mutex_lock(&g_lock);
 	block = g_map.large;
+	// ft_putstr("free ");
+	// ft_print_base((long)ptr, 16);
+	// ft_putchar('\n');
 	// if ft_free_block return 0, means it could be ptr in large zone
 	if (ft_free_block(ft_find_zone(&zone_size, ptr), zone_size, ptr) == 0)
 	{

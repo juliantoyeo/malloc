@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   malloc.h                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/09 21:20:19 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/08 18:13:59 by jyeo             ###   ########.fr       */
+/*   Updated: 2020/01/18 03:12:52 by juliantoyeo      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 # include <pthread.h>
 # include "../libft/includes/libft.h"
 # define BLOCK_SIZE 16
-# define TINY_ZONE_SIZE 1048576
+# define TINY_ZONE_SIZE 4194304
 # define TINY_CHUNK_SIZE 16
 # define MAX_TINY_CHUNK_SIZE 496
 # define SMALL_ZONE_SIZE 8388608

@@ -6,7 +6,7 @@
 /*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/09 21:22:09 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/04 02:39:43 by juliantoyeo      ###   ########.fr       */
+/*   Updated: 2020/01/18 03:02:43 by juliantoyeo      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,20 +14,10 @@
 
 // Create a new block
 static t_block	*ft_create_block(t_zone *zone, size_t zone_size, size_t size, \
-	t_block *prev_block)
+	void *new_location)
 {
-	void		*new_location;
 	t_block		*block;
 
-	// If this is the 1st block, the new location is base on the start of the zone + the size of zone struct
-	if (zone->block == NULL)
-		new_location = (void *)zone + sizeof(t_zone);
-	else
-	// Else the new location is base on previous block location + the previous size + metadata block size
-	{
-		new_location = (void *)prev_block + (prev_block->size_and_flag >> 1)
-			+ BLOCK_SIZE;
-	}
 	if (((((void *)zone + zone_size) - (void *)new_location)) \
 		< (long)(BLOCK_SIZE + size))
 	return (NULL); // not enough size to be given at the new location
@@ -58,14 +48,16 @@ static void		ft_split_block(t_zone *zone, t_block *block, size_t zone_size, \
 {
 	int			remaining;
 	t_block		*new_block;
+	void		*new_location;
 
 	remaining = (block->size_and_flag >> 1) - size;
 	// If the remaining size is enough to store even a metadata block, we split it and set the new block as free
 	// If not, don't split it, its better to give a bigger size then risk of lost track of metadata
 	if (remaining >= BLOCK_SIZE)
 	{
+		new_location = (void *)block + size + BLOCK_SIZE;
 		new_block = ft_create_block(zone, zone_size, remaining \
-			- BLOCK_SIZE, block);
+			- BLOCK_SIZE, new_location);
 		if (new_block != NULL)
 		{
 			// After the remaining size is calculated, assign the new allocated size to the block
@@ -76,34 +68,43 @@ static void		ft_split_block(t_zone *zone, t_block *block, size_t zone_size, \
 			block->next = new_block;
 			zone->remaining += (new_block->size_and_flag >> 1);
 		}
+		else
+			block->size_and_flag ^= 1;	
 	}
+	else
+		block->size_and_flag ^= 1;
 }
 
 static void		ft_get_block(t_zone *zone, size_t zone_size, size_t size, \
 	t_block **block)
 {
+	void		*new_location;
 	t_block		*prev;
 
 	prev = NULL;
-	// iterate to find a free block, if it is free, check if the size is correct, if not iterate till the end of the chain
-	while ((*block) && \
-		(((*block)->size_and_flag & 1) == 0 || ((*block)->size_and_flag >> 1) < size))
+	while ((*block) && (((*block)->size_and_flag & 1) == 0 || \
+		((*block)->size_and_flag >> 1) < size))
 	{
 		prev = (*block);
 		(*block) = (*block)->next;
 	};
-	// No free block to be use, create a new block and add it to the end of the chain list
 	if ((*block) == NULL)
 	{
-		(*block) = ft_create_block(zone, zone_size, size, prev);
+		// If this is the 1st block, the new location is base on the start of the zone + the size of zone struct
+		if (zone->block == NULL)
+			new_location = (void *)zone + sizeof(t_zone);
+		else
+		// Else the new location is base on previous block location + the previous size + metadata block size
+		{
+			new_location = (void *)prev + (prev->size_and_flag >> 1)
+				+ BLOCK_SIZE;
+		}
+		(*block) = ft_create_block(zone, zone_size, size, new_location);
 		if (prev)
 			prev->next = (*block);
 	}
-	/* Found a free block, assign the new size and check if the remaining size is splitable */
 	else
-	{
 		ft_split_block(zone, (*block), zone_size, size);
-	}
 }
 
 void			*ft_alloc_data(t_zone **zone, size_t zone_size, size_t len)

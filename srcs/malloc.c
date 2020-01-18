@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   malloc.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/02 16:25:44 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/08 18:18:55 by jyeo             ###   ########.fr       */
+/*   Updated: 2020/01/18 02:56:24 by juliantoyeo      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,9 @@ void		*malloc(size_t size)
 	void	*pointer;
 
 	pointer = NULL;
+	// ft_putstr("malloc with size: ");
+	// ft_putnbr(size);
+	// ft_putstr(", ");
 	if (INT64_MAX < size && size <= UINT64_MAX)
 		return (NULL);
 	pthread_mutex_lock(&g_lock);
@@ -59,5 +62,9 @@ void		*malloc(size_t size)
 	else
 		pointer = ft_alloc_data_large(&g_map.large, size);
 	pthread_mutex_unlock(&g_lock);
+	// ft_putstr("return pointer: ");
+	// ft_print_base((long)pointer, 16);
+	// ft_putchar('\n');
+	// show_alloc_mem_free();
 	return (pointer);
 }

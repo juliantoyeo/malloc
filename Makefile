@@ -6,7 +6,7 @@
 #    By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/12/09 14:15:58 by jyeo              #+#    #+#              #
-#    Updated: 2020/01/05 20:57:28 by juliantoyeo      ###   ########.fr        #
+#    Updated: 2020/01/18 01:54:44 by juliantoyeo      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -51,12 +51,12 @@ $(OBJ): %.o: %.c
 	@$(CC) $(FLAG) $(INCLUDES) -c $< -o $@
 
 test: lib $(NAME)
-	$(CC) $(INCLUDES) -w -L. -lft_malloc test/test0.c -o test0
-	$(CC) $(INCLUDES) -w -L. -lft_malloc test/test1.c -o test1
-	$(CC) $(INCLUDES) -w -L. -lft_malloc test/test2.c -o test2
-	$(CC) $(INCLUDES) -w -L. -lft_malloc test/test3.c -o test3
-	$(CC) $(INCLUDES) -w -L. -lft_malloc test/test3-1.c -o test3-1
-	$(CC) $(INCLUDES) -w -L. -lft_malloc test/test4.c -o test4
+	$(CC) $(INCLUDES) -w test/test0.c -o test0
+	$(CC) $(INCLUDES) -w test/test1.c -o test1
+	$(CC) $(INCLUDES) -w test/test2.c -o test2
+	$(CC) $(INCLUDES) -w test/test3.c -o test3
+	$(CC) $(INCLUDES) -w test/test3-1.c -o test3-1
+	$(CC) $(INCLUDES) -w test/test4.c -o test4
 	$(CC) $(INCLUDES) -w -L. -lft_malloc test/test5.c -o test5
 	@echo test0 ===================================================
 	@sh run.sh /usr/bin/time -l ./test0

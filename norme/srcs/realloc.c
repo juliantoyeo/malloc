@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   realloc.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/09 21:22:09 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/08 18:18:39 by jyeo             ###   ########.fr       */
+/*   Updated: 2020/01/18 03:03:50 by juliantoyeo      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,6 +77,11 @@ static void	*ft_reallocate_large_data(void *ptr, size_t size)
 		}
 		else
 			new_ptr = ft_reallocate(block, ptr, size);
+	}
+	else
+	{
+		pthread_mutex_unlock(&g_lock);
+		return (malloc(size));
 	}
 	return (new_ptr);
 }

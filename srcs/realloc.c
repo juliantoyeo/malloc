@@ -6,7 +6,7 @@
 /*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/09 21:22:09 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/04 00:52:07 by juliantoyeo      ###   ########.fr       */
+/*   Updated: 2020/01/18 02:33:13 by juliantoyeo      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,6 +78,11 @@ static void	*ft_reallocate_large_data(void *ptr, size_t size)
 		else
 			new_ptr = ft_reallocate(block, ptr, size);
 	}
+	else
+	{
+		pthread_mutex_unlock(&g_lock);
+		return (malloc(size));
+	}
 	return (new_ptr);
 }
 
@@ -86,6 +91,11 @@ void		*realloc(void *ptr, size_t size)
 	t_zone	**zone;
 	size_t	zone_size;
 	
+	// ft_putstr("realloc with size: ");
+	// ft_putnbr(size);
+	// ft_putchar(' ');
+	// ft_print_base((long)ptr, 16);
+	// ft_putchar('\n');
 	if (ptr == NULL || (int)size < 0)
 		return (malloc(size));
 	pthread_mutex_lock(&g_lock);
