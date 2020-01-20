@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   free.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: juliantoyeo <juliantoyeo@student.42.fr>    +#+  +:+       +#+        */
+/*   By: jyeo <jyeo@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/09 21:22:09 by jyeo              #+#    #+#             */
-/*   Updated: 2020/01/18 02:33:11 by juliantoyeo      ###   ########.fr       */
+/*   Updated: 2020/01/20 17:23:10 by jyeo             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,7 +125,7 @@ void		free(void *ptr)
 			munmap(block, ((block->size_and_flag >> 1) + BLOCK_SIZE));
 		}
 		// else
-		// 	ft_print_error(INVALID, ptr, 0);
+			// ft_print_error(INVALID, ptr, 0);
 	}
 	pthread_mutex_unlock(&g_lock);
 }
